@@ -1,8 +1,13 @@
-import Anthropic from '@anthropic-ai/sdk';
-import { AIProvider, AIProviderConfig, ReviewRequest, ReviewResponse } from './AIProvider';
-import * as core from '@actions/core';
-import { baseCodeReviewPrompt, updateReviewPrompt } from '../prompts';
-import { TextBlock } from '@anthropic-ai/sdk/resources';
+import Anthropic from "@anthropic-ai/sdk";
+import {
+  AIProvider,
+  AIProviderConfig,
+  ReviewRequest,
+  ReviewResponse,
+} from "./AIProvider";
+import * as core from "@actions/core";
+import { baseCodeReviewPrompt, updateReviewPrompt } from "../prompts";
+import { TextBlock } from "@anthropic-ai/sdk/resources";
 
 export class AnthropicProvider implements AIProvider {
   private config!: AIProviderConfig;
@@ -17,7 +22,9 @@ export class AnthropicProvider implements AIProvider {
   }
 
   async review(request: ReviewRequest): Promise<ReviewResponse> {
-    core.debug(`Sending request to Anthropic with prompt structure: ${JSON.stringify(request, null, 2)}`);
+    core.debug(
+      `Sending request to Anthropic with prompt structure: ${JSON.stringify(request, null, 2)}`,
+    );
 
     const response = await this.client.messages.create({
       model: this.config.model,
@@ -25,18 +32,21 @@ export class AnthropicProvider implements AIProvider {
       system: this.buildSystemPrompt(request),
       messages: [
         {
-          role: 'user',
+          role: "user",
           content: this.buildPullRequestPrompt(request),
         },
         {
-          role: 'user',
-          content: 'Return the response in JSON format only, no other text or comments.',
+          role: "user",
+          content:
+            "Return the response in JSON format only, no other text or comments.",
         },
       ],
       temperature: this.config.temperature ?? 0.3,
     });
 
-    core.debug(`Raw Anthropic response: ${JSON.stringify((response.content[0] as TextBlock).text, null, 2)}`);
+    core.debug(
+      `Raw Anthropic response: ${JSON.stringify((response.content[0] as TextBlock).text, null, 2)}`,
+    );
 
     const parsedResponse = this.parseResponse(response);
     core.info(`Parsed response: ${JSON.stringify(parsedResponse, null, 2)}`);
@@ -46,18 +56,18 @@ export class AnthropicProvider implements AIProvider {
 
   private buildPullRequestPrompt(request: ReviewRequest): string {
     return JSON.stringify({
-      type: 'code_review',
+      type: "code_review",
       files: request.files,
       pr: request.pullRequest,
       context: request.context,
-      previousReviews: request.previousReviews?.map(review => ({
+      previousReviews: request.previousReviews?.map((review) => ({
         summary: review.summary,
-        lineComments: review.lineComments.map(comment => ({
+        lineComments: review.lineComments.map((comment) => ({
           path: comment.path,
           line: comment.line,
-          comment: comment.comment
-        }))
-      }))
+          comment: comment.comment,
+        })),
+      })),
     });
   }
 
@@ -65,7 +75,7 @@ export class AnthropicProvider implements AIProvider {
     const isUpdate = request.context.isUpdate;
     return `
       ${baseCodeReviewPrompt}
-      ${isUpdate ? updateReviewPrompt : ''}
+      ${isUpdate ? updateReviewPrompt : ""}
     `;
   }
 
@@ -81,9 +91,9 @@ export class AnthropicProvider implements AIProvider {
     } catch (error) {
       core.error(`Failed to parse Anthropic response: ${error}`);
       return {
-        summary: 'Failed to parse AI response',
+        summary: "Failed to parse AI response",
         lineComments: [],
-        suggestedAction: 'COMMENT',
+        suggestedAction: "COMMENT",
         confidence: 0,
       };
     }

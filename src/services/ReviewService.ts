@@ -1,8 +1,8 @@
-import { AIProvider } from '../providers/AIProvider';
-import { GitHubService } from '../services/GitHubService';
-import { DiffService } from '../services/DiffService';
-import { ReviewResponse } from '../providers/AIProvider';
-import * as core from '@actions/core';
+import { AIProvider } from "../providers/AIProvider";
+import { GitHubService } from "../services/GitHubService";
+import { DiffService } from "../services/DiffService";
+import { ReviewResponse } from "../providers/AIProvider";
+import * as core from "@actions/core";
 
 export interface ReviewServiceConfig {
   maxComments: number;
@@ -18,13 +18,13 @@ export class ReviewService {
     private aiProvider: AIProvider,
     private githubService: GitHubService,
     private diffService: DiffService,
-    config: ReviewServiceConfig
+    config: ReviewServiceConfig,
   ) {
     this.config = {
       maxComments: config.maxComments || 0,
       approveReviews: config.approveReviews,
       projectContext: config.projectContext,
-      contextFiles: config.contextFiles || ['package.json', 'README.md']
+      contextFiles: config.contextFiles || ["package.json", "README.md"],
     };
   }
 
@@ -36,7 +36,8 @@ export class ReviewService {
     core.info(`PR title: ${prDetails.title}`);
 
     // Get modified files from diff
-    const lastReviewedCommit = await this.githubService.getLastReviewedCommit(prNumber);
+    const lastReviewedCommit =
+      await this.githubService.getLastReviewedCommit(prNumber);
     const isUpdate = !!lastReviewedCommit;
 
     // If this is an update, get previous reviews
@@ -46,20 +47,29 @@ export class ReviewService {
       core.debug(`Found ${previousReviews.length} previous reviews`);
     }
 
-    const modifiedFiles = await this.diffService.getRelevantFiles(prDetails, lastReviewedCommit);
+    const modifiedFiles = await this.diffService.getRelevantFiles(
+      prDetails,
+      lastReviewedCommit,
+    );
     core.info(`Modified files length: ${modifiedFiles.length}`);
 
     // Get full content for each modified file
     const filesWithContent = await Promise.all(
       modifiedFiles.map(async (file) => {
-        const fullContent = await this.githubService.getFileContent(file.path, prDetails.head);
+        const fullContent = await this.githubService.getFileContent(
+          file.path,
+          prDetails.head,
+        );
         return {
           path: file.path,
           content: fullContent,
-          originalContent: await this.githubService.getFileContent(file.path, prDetails.base),
+          originalContent: await this.githubService.getFileContent(
+            file.path,
+            prDetails.base,
+          ),
           diff: file.diff,
         };
-      })
+      }),
     );
 
     // Get repository context (now using configured files)
@@ -77,31 +87,36 @@ export class ReviewService {
         head: prDetails.head,
       },
       context: {
-        repository: process.env.GITHUB_REPOSITORY ?? '',
-        owner: process.env.GITHUB_REPOSITORY_OWNER ?? '',
+        repository: process.env.GITHUB_REPOSITORY ?? "",
+        owner: process.env.GITHUB_REPOSITORY_OWNER ?? "",
         projectContext: this.config.projectContext,
         isUpdate,
       },
     });
 
     // Add model name to summary
-    const modelInfo = `_Code review performed by \`${process.env.INPUT_AI_PROVIDER?.toUpperCase() || 'AI'} - ${process.env.INPUT_AI_MODEL}\`._`;
+    const modelInfo = `_Code review performed by \`${process.env.INPUT_AI_PROVIDER?.toUpperCase() || "AI"} - ${process.env.INPUT_AI_MODEL}\`._`;
     review.summary = `${review.summary}\n\n------\n\n${modelInfo}`;
 
     // Submit review
     await this.githubService.submitReview(prNumber, {
       ...review,
-      lineComments: this.config.maxComments > 0 ? review.lineComments?.slice(0, this.config.maxComments) : review.lineComments,
+      lineComments:
+        this.config.maxComments > 0
+          ? review.lineComments?.slice(0, this.config.maxComments)
+          : review.lineComments,
       suggestedAction: this.normalizeReviewEvent(review.suggestedAction),
     });
 
     return review;
   }
 
-  private async getRepositoryContext(): Promise<Array<{path: string, content: string}>> {
+  private async getRepositoryContext(): Promise<
+    Array<{ path: string; content: string }>
+  > {
     const results = [];
 
-    for (const file of (this.config.contextFiles || [])) {
+    for (const file of this.config.contextFiles || []) {
       try {
         const content = await this.githubService.getFileContent(file);
         if (content) {
@@ -115,17 +130,20 @@ export class ReviewService {
     return results;
   }
 
-  private normalizeReviewEvent(action: string): 'APPROVE' | 'REQUEST_CHANGES' | 'COMMENT' {
+  private normalizeReviewEvent(
+    action: string,
+  ): "APPROVE" | "REQUEST_CHANGES" | "COMMENT" {
     if (!action || !this.config.approveReviews) {
-      return 'COMMENT';
+      return "COMMENT";
     }
 
-    const eventMap: Record<string, 'APPROVE' | 'REQUEST_CHANGES' | 'COMMENT'> = {
-      'approve': 'APPROVE',
-      'request_changes': 'REQUEST_CHANGES',
-      'comment': 'COMMENT',
-    };
+    const eventMap: Record<string, "APPROVE" | "REQUEST_CHANGES" | "COMMENT"> =
+      {
+        approve: "APPROVE",
+        request_changes: "REQUEST_CHANGES",
+        comment: "COMMENT",
+      };
 
-    return eventMap[action.toLowerCase()] || 'COMMENT';
+    return eventMap[action.toLowerCase()] || "COMMENT";
   }
 }

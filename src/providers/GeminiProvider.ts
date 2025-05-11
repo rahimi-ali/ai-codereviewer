@@ -1,7 +1,12 @@
-import { GenerativeModel, GoogleGenerativeAI } from '@google/generative-ai';
-import { AIProvider, AIProviderConfig, ReviewRequest, ReviewResponse } from './AIProvider';
-import * as core from '@actions/core';
-import { baseCodeReviewPrompt, updateReviewPrompt } from '../prompts';
+import { GenerativeModel, GoogleGenerativeAI } from "@google/generative-ai";
+import {
+  AIProvider,
+  AIProviderConfig,
+  ReviewRequest,
+  ReviewResponse,
+} from "./AIProvider";
+import * as core from "@actions/core";
+import { baseCodeReviewPrompt, updateReviewPrompt } from "../prompts";
 
 export class GeminiProvider implements AIProvider {
   private config!: AIProviderConfig;
@@ -14,30 +19,34 @@ export class GeminiProvider implements AIProvider {
     this.model = this.client.getGenerativeModel({
       model: this.config.model,
       generationConfig: {
-        responseMimeType: 'application/json',
+        responseMimeType: "application/json",
       },
     });
   }
 
   async review(request: ReviewRequest): Promise<ReviewResponse> {
-    core.debug(`Sending request to Gemini with prompt structure: ${JSON.stringify(request, null, 2)}`);
+    core.debug(
+      `Sending request to Gemini with prompt structure: ${JSON.stringify(request, null, 2)}`,
+    );
 
     const result = await this.model.generateContent({
       systemInstruction: this.buildSystemPrompt(request),
       contents: [
         {
-          role: 'user',
+          role: "user",
           parts: [
             {
               text: this.buildPullRequestPrompt(request),
-            }
-          ]
-        }
-      ]
+            },
+          ],
+        },
+      ],
     });
 
     const response = result.response;
-    core.debug(`Raw Gemini response: ${JSON.stringify(response.text(), null, 2)}`);
+    core.debug(
+      `Raw Gemini response: ${JSON.stringify(response.text(), null, 2)}`,
+    );
 
     const parsedResponse = this.parseResponse(response);
     core.info(`Parsed response: ${JSON.stringify(parsedResponse, null, 2)}`);
@@ -47,18 +56,18 @@ export class GeminiProvider implements AIProvider {
 
   private buildPullRequestPrompt(request: ReviewRequest): string {
     return JSON.stringify({
-      type: 'code_review',
+      type: "code_review",
       files: request.files,
       pr: request.pullRequest,
       context: request.context,
-      previousReviews: request.previousReviews?.map(review => ({
+      previousReviews: request.previousReviews?.map((review) => ({
         summary: review.summary,
-        lineComments: review.lineComments.map(comment => ({
+        lineComments: review.lineComments.map((comment) => ({
           path: comment.path,
           line: comment.line,
-          comment: comment.comment
-        }))
-      }))
+          comment: comment.comment,
+        })),
+      })),
     });
   }
 
@@ -66,7 +75,7 @@ export class GeminiProvider implements AIProvider {
     const isUpdate = request.context.isUpdate;
     return `
       ${baseCodeReviewPrompt}
-      ${isUpdate ? updateReviewPrompt : ''}
+      ${isUpdate ? updateReviewPrompt : ""}
     `;
   }
 
@@ -82,9 +91,9 @@ export class GeminiProvider implements AIProvider {
     } catch (error) {
       core.error(`Failed to parse Gemini response: ${error}`);
       return {
-        summary: 'Failed to parse AI response',
+        summary: "Failed to parse AI response",
         lineComments: [],
-        suggestedAction: 'COMMENT',
+        suggestedAction: "COMMENT",
         confidence: 0,
       };
     }

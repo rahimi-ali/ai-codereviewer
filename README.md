@@ -16,11 +16,13 @@ AI Code Reviewer is a GitHub Action that leverages multiple AI providers (OpenAI
 ## Setup
 
 1. Choose your preferred AI provider and get an API key:
+
    - [OpenAI](https://platform.openai.com/api-keys)
    - [Anthropic](https://console.anthropic.com/account/keys)
    - [Google AI](https://makersuite.google.com/app/apikey)
 
 2. Add the API key as a GitHub Secret in your repository:
+
    - `OPENAI_API_KEY` for OpenAI
    - `ANTHROPIC_API_KEY` for Claude
    - `GOOGLE_AI_KEY` for Google Gemini
@@ -40,12 +42,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: AI Code Review
         uses: your-username/ai-code-reviewer@main
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
+
           # Choose your AI provider and key
           AI_PROVIDER: "openai" # or "anthropic" or "google"
           AI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -62,18 +64,18 @@ jobs:
 
 ## Configuration
 
-| Input | Description | Default |
-|-------|-------------|---------|
-| `AI_PROVIDER` | AI provider to use (`openai`, `anthropic`, `google`) | `openai` |
-| `AI_API_KEY` | API key for chosen provider | Required |
-| `AI_BASE_URL` | API base url override for chosen provider | `""` |
-| `AI_MODEL` | Model to use (see supported models below) | Provider's default |
-| `AI_TEMPERATURE` | Temperature for AI model | `0` |
-| `APPROVE_REVIEWS` | Whether to approve PRs automatically | `true` |
-| `MAX_COMMENTS` | Maximum number of review comments | `0` |
-| `PROJECT_CONTEXT` | Project context for better reviews | `""` |
-| `CONTEXT_FILES` | Files to include in review (comma-separated) | `"package.json,README.md"` |
-| `EXCLUDE_PATTERNS` | Files to exclude (glob patterns, comma-separated) | `"**/*.lock,**/*.json,**/*.md"` |
+| Input              | Description                                          | Default                         |
+| ------------------ | ---------------------------------------------------- | ------------------------------- |
+| `AI_PROVIDER`      | AI provider to use (`openai`, `anthropic`, `google`) | `openai`                        |
+| `AI_API_KEY`       | API key for chosen provider                          | Required                        |
+| `AI_BASE_URL`      | API base url override for chosen provider            | `""`                            |
+| `AI_MODEL`         | Model to use (see supported models below)            | Provider's default              |
+| `AI_TEMPERATURE`   | Temperature for AI model                             | `0`                             |
+| `APPROVE_REVIEWS`  | Whether to approve PRs automatically                 | `true`                          |
+| `MAX_COMMENTS`     | Maximum number of review comments                    | `0`                             |
+| `PROJECT_CONTEXT`  | Project context for better reviews                   | `""`                            |
+| `CONTEXT_FILES`    | Files to include in review (comma-separated)         | `"package.json,README.md"`      |
+| `EXCLUDE_PATTERNS` | Files to exclude (glob patterns, comma-separated)    | `"**/*.lock,**/*.json,**/*.md"` |
 
 ### Supported Models
 
@@ -106,6 +108,7 @@ yarn test:e2e <repo> <pr_number>
 To test the action locally:
 
 1. Create a `.env` file with your credentials:
+
 ```env
 GITHUB_TOKEN=your_github_token
 AI_PROVIDER=openai  # or anthropic, google
@@ -114,11 +117,13 @@ AI_MODEL=your_preferred_model
 ```
 
 2. Generate a test PR payload:
+
 ```bash
 yarn generate-pr your-org your-repo 123
 ```
 
 3. Run the e2e test:
+
 ```bash
 yarn test:e2e your-repo 123
 ```
