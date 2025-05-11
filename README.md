@@ -66,6 +66,7 @@ jobs:
 |-------|-------------|---------|
 | `AI_PROVIDER` | AI provider to use (`openai`, `anthropic`, `google`) | `openai` |
 | `AI_API_KEY` | API key for chosen provider | Required |
+| `AI_BASE_URL` | API base url override for chosen provider | `""` |
 | `AI_MODEL` | Model to use (see supported models below) | Provider's default |
 | `AI_TEMPERATURE` | Temperature for AI model | `0` |
 | `APPROVE_REVIEWS` | Whether to approve PRs automatically | `true` |
