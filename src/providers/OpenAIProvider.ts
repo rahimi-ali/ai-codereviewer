@@ -9,7 +9,7 @@ export class OpenAIProvider implements AIProvider {
 
   async initialize(config: AIProviderConfig): Promise<void> {
     this.config = config;
-    this.client = new OpenAI({ apiKey: config.apiKey });
+    this.client = new OpenAI({ baseURL: config.baseUrl, apiKey: config.apiKey });
   }
 
   async review(request: ReviewRequest): Promise<ReviewResponse> {

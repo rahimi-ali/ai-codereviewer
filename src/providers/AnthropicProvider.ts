@@ -11,7 +11,8 @@ export class AnthropicProvider implements AIProvider {
   async initialize(config: AIProviderConfig): Promise<void> {
     this.config = config;
     this.client = new Anthropic({
-      apiKey: config.apiKey
+      apiKey: config.apiKey,
+      baseURL: config.baseUrl,
     });
   }
 

@@ -29,7 +29,6 @@ For the "summary" field, use Markdown formatting and follow these guidelines:
    - Security vulnerabilities
    - Performance degradation
    - Critical logic flaws
-   - Breaking API changes without migration path
 
 3. Verdict:
    Should be one of the following:
